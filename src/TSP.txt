@@ -1,0 +1,178 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+import java.lang.reflect.Array;
+import java.util.*;
+import java.util.Collections;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+
+
+/**
+ *
+ * @author Mohammad Asad
+ */
+
+
+class population {
+    
+        public int cityCount;
+        public int size;
+        public int samplesize;
+        public int Array[][];
+        public int weight[][] = {{0, 34, 36, 37, 31, 33, 35},
+                                {34, 0, 29, 23, 22, 25, 24},
+                                {36, 29, 0, 17, 12, 18, 17},
+                                {37, 23, 17, 0, 32, 30, 29},
+                                {31, 22, 12, 32, 0, 26, 24},
+                                {33, 25, 18, 30, 26, 0, 19},
+                                {35, 24, 17, 29, 24, 19, 0}};
+        
+        static void shuffleArray(int[] ar){
+            // If running on Java 6 or older, use `new Random()` on RHS here
+            Random rnd = ThreadLocalRandom.current();
+            for (int i = ar.length - 1; i > 0; i--)
+            {
+              int index = rnd.nextInt(i + 1);
+              // Simple swap
+              int a = ar[index];
+              ar[index] = ar[i];
+              ar[i] = a;
+            }
+        }
+        
+        population(int size, int cityCount, int samplesize){   //Creating Population
+            this.size = size;
+            this.cityCount = cityCount;
+            this.samplesize = samplesize;
+            Array = new int [size][cityCount+1];
+            int temp[] = new int[cityCount-1];
+            
+            
+            for(int a=1; a<cityCount; a++){
+                temp[a-1] = a;
+            }
+            for(int i=0; i<size; i++){
+                shuffleArray(temp);
+                for(int j=0; j<cityCount+1; j++){
+                    if(j == 0 || j == 7){
+                        Array[i][j] = 0;
+                    }
+                    else{
+                        Array[i][j] = temp[j-1];
+                    }
+                }
+            }
+        }
+        
+        void print(){
+            for(int i=0; i<size; i++){
+                for(int j=0; j <=cityCount ; j++){
+                    System.out.print(Array[i][j]);
+                }
+                System.out.println();
+            }
+        }
+        
+        int getFitness(int array[]){
+            int sum = 0;
+            for(int i=0; i<cityCount-1; i++){
+                int a= array[i];
+                int b= array[i+1];
+                sum += weight[a][b];
+            }
+            return sum;
+        }// Returns the fitness of each path
+       
+        
+        int returnFittest(int sampArray[]){    //Return the fittest array/parent
+            getSample(sampArray);
+            int min = 0;
+            for(int i=1; i<samplesize; i++){
+                if(getFitness(Array[sampArray[min]]) > getFitness(Array[sampArray[i]])){
+                    min = i;
+                }
+            }
+            return min;
+        }
+        
+        void getSample(int getSample[]){    // Generate the random sample 
+            int sampArray[] = new int[size];
+            for(int i=0;i<size; i++){
+                sampArray[i] = i;
+            }
+            shuffleArray(sampArray);
+            int j=0;
+            for(int i=0; j<samplesize; i+=2){
+                getSample[j] = sampArray[i];
+                j++;
+            }
+        }
+        
+        void getParents(){
+            int sampArray[] = new int[samplesize];
+            int parent1[] = new int[cityCount+1];
+            int parent2[] = new int[cityCount+1];
+            int p1 = returnFittest(sampArray);
+            int p2 = returnFittest(sampArray);
+            for(int i=0; i<=cityCount; i++){
+                parent1[i]= Array[p1][i];
+                parent2[i]= Array[p2][i];
+            }
+            crossover(parent1,parent2);
+            
+            
+        }
+        
+        int[] crossover(int p1[], int p2[]){
+            int child[] = new int[cityCount];
+            int stPos = new Random().nextInt(cityCount-1)%7;
+            int endPos = new Random().nextInt(p2.length)%7;
+            if(stPos > endPos){
+                int a=stPos;
+                stPos = endPos;
+                stPos = a;
+            }
+            for(int i=stPos; i<= endPos; i++){
+                child[i] = p1[i];
+            }   
+            for(int j=1; j<cityCount;j++){
+                if(j>= stPos && j<=endPos){
+                    continue;
+                }
+                else{
+                    boolean cross = true;
+                    for(int k=stPos ; k<= endPos; k++){
+                        if(p2[j] == p1[k]){
+                            cross= false;
+                            break;
+                        }
+                    }
+                    if (cross == true){
+                        child[j] = p2[j];
+                    }
+              }
+            }
+          
+            for(int l=0; l<8; l++){
+                System.out.print(child[l]);
+            }
+            return child;
+        }
+}
+
+public class TSP {
+    
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        population p= new population(100, 7, 10);
+        p.getParents();
+
+    }
+    
+}
+
